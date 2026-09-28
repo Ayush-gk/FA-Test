@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TVM &amp; Python Practical Test</title>
+<style>
+:root{
+  --bg:#eceff2; --panel:#ffffff; --ink:#16222c; --muted:#5a6a78; --line:#d3dae1;
+  --xl:#1d6f42; --xl-soft:#e3f1e9; --py:#2b5f8a; --py-soft:#e2edf6;
+  --warn:#8a4b00; --warn-soft:#fdf0dc; --bad:#b3261e; --bad-soft:#fbe6e4;
+  --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5;font-size:16px}
+button,input,textarea{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+:focus-visible{outline:3px solid #f2b705;outline-offset:2px}
+
+/* ---------- buttons ---------- */
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:.55rem 1rem;cursor:pointer;font-weight:600}
+.btn:hover:not(:disabled){border-color:#9aa8b5}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover:not(:disabled){background:#0b141b}
+.btn.xl{background:var(--xl);border-color:var(--xl);color:#fff}
+.btn.py{background:var(--py);border-color:var(--py);color:#fff}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.link{border:0;background:none;color:var(--py);text-decoration:underline;padding:.2rem .3rem;font-weight:500}
+
+/* ---------- start screen ---------- */
+.start-wrap{max-width:900px;margin:0 auto;padding:2rem 1rem 3rem}
+.start-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.split-bar{display:flex;height:34px;font-size:.85rem;font-weight:600;color:#fff}
+.split-bar div{display:flex;align-items:center;padding:0 1rem}
+.split-bar .a{background:var(--xl);flex:1}
+.split-bar .b{background:var(--py);flex:1;justify-content:flex-end}
+.start-body{display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;padding:2rem}
+.start-body h1{font-size:1.75rem;line-height:1.2;margin-bottom:.5rem}
+.lede{color:var(--muted);margin-bottom:1.25rem}
+.rules{padding-left:1.1rem;margin:0;display:grid;gap:.55rem;font-size:.95rem}
+.rules b{font-weight:650}
+.form label{display:block;font-weight:600;margin:0 0 .3rem}
+.form .field{margin-bottom:1rem}
+.form input{width:100%;padding:.65rem .75rem;border:1px solid #aab6c1;border-radius:8px;background:#fff}
+.form input:focus{border-color:var(--ink)}
+.field .err{color:var(--bad);font-size:.85rem;min-height:1.1em;margin-top:.25rem}
+.engine{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--muted);margin:.25rem 0 1rem}
+.dot{width:10px;height:10px;border-radius:50%;background:#c9a227;flex:none}
+.dot.ready{background:var(--xl)} .dot.failed{background:var(--bad)}
+.form-error{background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:.6rem .8rem;margin-bottom:1rem;font-size:.92rem}
+.start-btn{width:100%;padding:.8rem 1rem;font-size:1.05rem}
+
+/* ---------- test screen ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px;margin:0 auto;padding:.6rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.who{flex:1;min-width:180px}
+.who b{display:block;font-size:1rem;line-height:1.2}
+.who span{font-size:.85rem;color:var(--muted)}
+.timer-box{text-align:center}
+.timer{font-family:var(--mono);font-size:1.7rem;font-weight:700;letter-spacing:.02em;line-height:1}
+.timer.warn{color:var(--warn)} .timer.danger{color:var(--bad)}
+.timer-cap{font-size:.75rem;color:var(--muted)}
+.chip-info{font-size:.85rem;border:1px solid var(--line);border-radius:999px;padding:.2rem .7rem;color:var(--muted)}
+.chip-info.hot{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.progress{height:4px;background:var(--line)}
+.progress i{display:block;height:100%;background:var(--xl);width:100%;transition:width .25s linear}
+.progress i.warn{background:#c77b00} .progress i.danger{background:var(--bad)}
+.notice{max-width:1180px;margin:.75rem auto 0;padding:.6rem 1rem;background:var(--warn-soft);color:var(--warn);border-radius:8px;font-size:.92rem}
+.layout{max-width:1180px;margin:0 auto;padding:1rem;display:grid;grid-template-columns:230px 1fr;gap:1rem;align-items:start}
+.palette{background:#fff;border:1px solid var(--line);border-radius:12px;padding:1rem;position:sticky;top:88px}
+.palette h3{font-size:.9rem;margin:0 0 .5rem}
+.palette h3:not(:first-child){margin-top:1rem}
+.pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pbtn{aspect-ratio:1;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;font-weight:650;font-size:.9rem}
+.pbtn.sec-xl.done{background:var(--xl);border-color:var(--xl);color:#fff}
+.pbtn.sec-py.done{background:var(--py);border-color:var(--py);color:#fff}
+.pbtn.cur{outline:3px solid var(--ink);outline-offset:1px}
+.legend{margin-top:1rem;font-size:.8rem;color:var(--muted)}
+.submit-side{margin-top:1rem;width:100%}
+.qcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:1.25rem 1.5rem 1.5rem;min-width:0}
+.qhead{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap}
+.badge{display:inline-block;border-radius:6px;padding:.15rem .6rem;font-size:.85rem;font-weight:650}
+.badge.xl{background:var(--xl-soft);color:var(--xl)} .badge.py{background:var(--py-soft);color:var(--py)}
+.qnum{color:var(--muted);font-size:.9rem}
+.qtext{font-size:1.15rem;line-height:1.55;margin-bottom:1.25rem;max-width:70ch}
+.qnav{display:flex;justify-content:space-between;gap:.75rem;margin-top:1.5rem}
+
+/* excel */
+.xlbar{display:flex;align-items:stretch;border:1px solid #b8c2cc;border-radius:8px 8px 0 0;background:#f6f7f8;overflow:hidden}
+.namebox{width:64px;flex:none;display:flex;align-items:center;justify-content:center;border-right:1px solid #b8c2cc;background:#fff;font-size:.9rem}
+.fxl{width:42px;flex:none;display:flex;align-items:center;justify-content:center;border-right:1px solid #b8c2cc;font-style:italic;font-family:Georgia,serif;color:#555}
+.xlbar input{flex:1;min-width:0;border:0;padding:.6rem .75rem;font-family:var(--mono);font-size:1rem;background:#fff}
+.xlbar input:focus-visible{outline-offset:-3px}
+.xlbar button{border:0;border-left:1px solid #b8c2cc;background:var(--xl);color:#fff;padding:0 1rem;font-weight:650;cursor:pointer}
+.xlgrid{border:1px solid #b8c2cc;border-top:0;border-radius:0 0 8px 8px;overflow-x:auto;background:#fff}
+.xlgrid table{border-collapse:collapse;width:100%;min-width:520px;font-size:.92rem}
+.xlgrid th{background:#e9ecef;font-weight:500;color:#444;border:1px solid #cfd6dc;padding:.2rem .5rem;text-align:center}
+.xlgrid td{border:1px solid #e1e6ea;height:30px;padding:0 .5rem}
+.xlgrid th.rh{width:38px}
+.xlgrid td.sel{outline:2px solid var(--xl);outline-offset:-2px;background:#fff;position:relative}
+.xlgrid td.sel div{overflow:hidden;white-space:nowrap}
+.xlgrid td.sel .num{text-align:right} .xlgrid td.sel .err{text-align:center}
+.xlmsg{margin-top:.6rem;font-size:.9rem;color:var(--muted);min-height:1.4em}
+.xlmsg.bad{background:var(--bad-soft);color:var(--bad);padding:.5rem .75rem;border-radius:8px}
+
+/* python */
+.pytool{display:flex;align-items:center;justify-content:space-between;gap:.5rem;background:#eef3f8;border:1px solid #b8c6d4;border-bottom:0;border-radius:8px 8px 0 0;padding:.4rem .6rem;flex-wrap:wrap}
+.pytool span{font-family:var(--mono);font-size:.85rem;color:var(--py)}
+.pytool .btns{display:flex;gap:.4rem}
+.pytool .btn{padding:.3rem .8rem;font-size:.9rem}
+.code{display:block;width:100%;min-height:210px;resize:vertical;border:1px solid #b8c6d4;border-radius:0 0 8px 8px;padding:.75rem;font-family:var(--mono);font-size:.95rem;line-height:1.5;tab-size:4;background:#fff;white-space:pre;overflow:auto}
+.outlabel{font-size:.85rem;font-weight:650;margin:1rem 0 .3rem;color:var(--muted)}
+.out{margin:0;min-height:88px;max-height:280px;overflow:auto;background:#14202b;color:#e6edf3;border-radius:8px;padding:.75rem;font-family:var(--mono);font-size:.92rem;white-space:pre-wrap;word-break:break-word}
+.out.err{color:#ffb4ab} .out .muted{color:#8aa0b2}
+
+/* ---------- result ---------- */
+.res-wrap{max-width:760px;margin:0 auto;padding:2rem 1rem 3rem}
+.res-card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.res-head{padding:1.5rem 1.75rem;display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.res-head h1{font-size:1.4rem}
+.res-head p{color:var(--muted);font-size:.95rem}
+.score{font-size:2.6rem;font-weight:750;line-height:1}
+.score small{font-size:1.1rem;color:var(--muted);font-weight:500}
+.res-body{padding:1.25rem 1.75rem 1.75rem}
+.res-body dl{display:grid;grid-template-columns:max-content 1fr;gap:.45rem 1.5rem;margin:0 0 1.25rem}
+.res-body dt{color:var(--muted)} .res-body dd{margin:0;font-weight:600}
+.pill{display:inline-block;border-radius:6px;padding:0 .5rem}
+.pill.yes{background:var(--bad-soft);color:var(--bad)} .pill.no{background:var(--xl-soft);color:var(--xl)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:.4rem 0 1.25rem}
+.chips span{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:650;border:1px solid var(--line);color:var(--muted)}
+.chips .correct{background:var(--xl-soft);color:var(--xl);border-color:#b6d8c5}
+.chips .wrong{background:var(--bad-soft);color:var(--bad);border-color:#efc2be}
+.savebox{border-radius:8px;padding:.7rem .9rem;font-size:.92rem;margin-bottom:1rem;background:#f2f4f6}
+.savebox.ok{background:var(--xl-soft);color:var(--xl)}
+.savebox.bad{background:var(--bad-soft);color:var(--bad)}
+.savebox.warn{background:var(--warn-soft);color:var(--warn)}
+.res-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+
+/* ---------- overlays ---------- */
+.modal-bg{position:fixed;inset:0;background:rgba(15,25,35,.55);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:50}
+.modal{background:#fff;border-radius:12px;max-width:460px;width:100%;padding:1.5rem;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.modal h2{font-size:1.2rem;margin-bottom:.6rem}
+.modal p{color:#33434f;margin-bottom:1.25rem}
+.modal .acts{display:flex;justify-content:flex-end;gap:.6rem;flex-wrap:wrap}
+.modal.warn h2{color:var(--warn)}
+.busy{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:1rem}
+.spinner{width:38px;height:38px;border:4px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:3s}.progress i{transition:none}}
+
+@media (max-width:820px){
+  .start-body{grid-template-columns:1fr;padding:1.25rem}
+  .layout{grid-template-columns:1fr}
+  .palette{position:static}
+  .pgrid{grid-template-columns:repeat(10,1fr)}
+  .topbar-in{gap:.6rem}
+  .timer{font-size:1.4rem}
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:2rem">This test needs JavaScript. Please enable it and reload the page.</p></noscript>
+
+<!-- ======================= START ======================= -->
+<main id="screen-start" class="start-wrap" hidden>
+  <div class="start-card">
+    <div class="split-bar" aria-hidden="true"><div class="a" id="bar-a"></div><div class="b" id="bar-b"></div></div>
+    <div class="start-body">
+      <section>
+        <h1 id="test-title"></h1>
+        <p class="lede" id="test-lede"></p>
+        <ul class="rules" id="rules"></ul>
+      </section>
+      <form class="form" id="start-form" novalidate autocomplete="off">
+        <div class="field">
+          <label for="reg">Register number</label>
+          <input id="reg" name="reg" maxlength="20" autocapitalize="characters" spellcheck="false">
+          <div class="err" id="reg-err"></div>
+        </div>
+        <div class="field">
+          <label for="sname">Full name</label>
+          <input id="sname" name="sname" maxlength="60" spellcheck="false">
+          <div class="err" id="name-err"></div>
+        </div>
+        <div class="engine"><span class="dot" id="py-dot"></span><span id="py-status">Loading the Python engine…</span><button type="button" class="btn link" id="py-retry" hidden>Try again</button></div>
+        <div class="form-error" id="form-error" hidden></div>
+        <button class="btn primary start-btn" id="start-btn" type="submit" disabled>Start test now</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- ======================= TEST ======================= -->
+<div id="screen-test" hidden>
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="who"><b id="who-name"></b><span id="who-reg"></span></div>
+      <span class="chip-info" id="tab-chip">Tab switches: 0</span>
+      <div class="timer-box"><div class="timer" id="timer" role="timer" aria-live="off">20:00</div><div class="timer-cap">time left</div></div>
+      <button class="btn primary" id="submit-top">Submit test</button>
+    </div>
+    <div class="progress"><i id="bar"></i></div>
+  </header>
+  <div class="notice" id="resume-note" hidden>This page was closed or reloaded earlier during the test. That has been recorded as suspected malpractice.</div>
+  <div class="layout">
+    <aside class="palette" aria-label="Question navigator">
+      <h3 id="pal-xl-title"></h3><div class="pgrid" id="pal-xl"></div>
+      <h3 id="pal-py-title"></h3><div class="pgrid" id="pal-py"></div>
+      <p class="legend">Filled = answered. Answers save as you type.</p>
+    </aside>
+    <section class="qcard" id="qcard"></section>
+  </div>
+</div>
+
+<!-- ======================= RESULT ======================= -->
+<main id="screen-result" class="res-wrap" hidden>
+  <div class="res-card">
+    <div class="res-head">
+      <div><h1>Test submitted</h1><p id="res-sub"></p></div>
+      <div class="score" id="res-score"></div>
+    </div>
+    <div class="res-body">
+      <dl id="res-list"></dl>
+      <p style="font-weight:650">Question by question</p>
+      <div class="chips" id="res-chips"></div>
+      <div class="savebox" id="save-box"></div>
+      <div class="res-actions">
+        <button class="btn" id="retry-save" hidden>Retry saving</button>
+        <button class="btn" id="dl-result">Download my result</button>
+        <button class="btn" id="next-student" hidden>Start for another student</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-root"></div>
+<div class="busy" id="busy" hidden><div class="spinner"></div><p id="busy-text"></p></div>
+
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+   SETTINGS — the only part you normally need to edit
+   ===================================================================== */
+const CONFIG = {
+  // Paste the Web app URL from Google Apps Script here (ends with /exec).
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzn4tz9wuLPg8VwMTPmMxZj7TCWoU2WI2JYrriYQrj9VhlAeZriDmX04rm5BAIRvKnu/exec',
+
+  TEST_TITLE: 'TVM & Python Practical Test',
+  DURATION_MINUTES: 20,
+  TVM_QUESTIONS: 10,          // Excel questions per student
+  PYTHON_QUESTIONS: 10,       // Python questions per student
+  MARKS_PER_QUESTION: 1,
+
+  // Excel marking
+  ACCEPT_EITHER_SIGN: true,          // FV/PV/PMT return negatives in Excel; accept +/- versions of the right value
+  REQUIRE_EXPECTED_FUNCTION: true,   // Excel answer must actually use the function (FV, PV, NPER, RATE, PMT)
+
+  // Python marking
+  REQUIRE_EXPECTED_OPERATOR: true,   // e.g. "using +" questions must contain a real + between operands
+
+  // Integrity
+  BLOCK_REPEAT_ATTEMPTS: true,       // one attempt per register number (checked in the Google Sheet)
+  MALPRACTICE_TAB_SWITCH_LIMIT: 0,   // 0 = tab switches are only counted; e.g. 3 = flag "Yes" after 3 switches
+
+  PYTHON_TIMEOUT_MS: 6000,           // stop a program that runs longer than this (infinite loops)
+  PYODIDE_INDEX_URL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/'
+};
+
+/* =====================================================================
+   QUESTION BANK  (answers are stored base64-encoded in "k")
+   To use a plain-text answer instead, replace  "k":"..."  with  "a":"..."
+   ===================================================================== */
+const BANK = [{"id":1,"t":"tvm","c":"FV","q":"Find the Future Value if you invest ₹1,000 for 5 years at an annual interest rate of 0.05.","k":"PUZWKDAuMDUsIDUsIDAsIC0xMDAwKQ=="},{"id":2,"t":"tvm","c":"FV","q":"Find the Future Value of ₹500 invested for 3 years at a rate of 0.06 per year.","k":"PUZWKDAuMDYsIDMsIDAsIC01MDAp"},{"id":3,"t":"tvm","c":"FV","q":"Calculate the Future Value of ₹2,000 invested for 10 years at an annual rate of 0.07.","k":"PUZWKDAuMDcsIDEwLCAwLCAtMjAwMCk="},{"id":4,"t":"tvm","c":"FV","q":"Find the Future Value of ₹1,500 after 4 years at an annual interest rate of 0.08.","k":"PUZWKDAuMDgsIDQsIDAsIC0xNTAwKQ=="},{"id":5,"t":"tvm","c":"FV","q":"Calculate the Future Value of ₹10,000 kept for 2 years at an interest rate of 0.04.","k":"PUZWKDAuMDQsIDIsIDAsIC0xMDAwMCk="},{"id":6,"t":"tvm","c":"FV","q":"What is the Future Value of ₹250 invested for 1 year at an annual rate of 0.10?","k":"PUZWKDAuMTAsIDEsIDAsIC0yNTAp"},{"id":7,"t":"tvm","c":"FV","q":"Find the Future Value of ₹5,000 invested for 6 years at an annual rate of 0.03.","k":"PUZWKDAuMDMsIDYsIDAsIC01MDAwKQ=="},{"id":8,"t":"tvm","c":"PV","q":"How much must you invest today at a rate of 0.05 per year to receive ₹1,000 in 3 years?","k":"PVBWKDAuMDUsIDMsIDAsIDEwMDAp"},{"id":9,"t":"tvm","c":"PV","q":"Find the Present Value of ₹5,000 due in 5 years discounted at an annual rate of 0.06.","k":"PVBWKDAuMDYsIDUsIDAsIDUwMDAp"},{"id":10,"t":"tvm","c":"PV","q":"What is the Present Value of ₹2,500 received in 2 years at a discount rate of 0.08?","k":"PVBWKDAuMDgsIDIsIDAsIDI1MDAp"},{"id":11,"t":"tvm","c":"PV","q":"Find the Present Value of ₹10,000 needed in 4 years at an annual rate of 0.07.","k":"PVBWKDAuMDcsIDQsIDAsIDEwMDAwKQ=="},{"id":12,"t":"tvm","c":"PV","q":"Calculate the Present Value of ₹800 to be received in 1 year at an interest rate of 0.10.","k":"PVBWKDAuMTAsIDEsIDAsIDgwMCk="},{"id":13,"t":"tvm","c":"PV","q":"Find the Present Value of ₹1,200 due in 6 years at an annual rate of 0.04.","k":"PVBWKDAuMDQsIDYsIDAsIDEyMDAp"},{"id":14,"t":"tvm","c":"PV","q":"How much is ₹3,000 to be received in 8 years worth today at a discount rate of 0.05?","k":"PVBWKDAuMDUsIDgsIDAsIDMwMDAp"},{"id":15,"t":"tvm","c":"NPER","q":"How many years will it take for ₹1,000 to grow to ₹2,000 at an annual interest rate of 0.10?","k":"PU5QRVIoMC4xMCwgMCwgLTEwMDAsIDIwMDAp"},{"id":16,"t":"tvm","c":"NPER","q":"How many years are needed to pay off a ₹5,000 loan paying ₹1,000 each year at a rate of 0.06?","k":"PU5QRVIoMC4wNiwgLTEwMDAsIDUwMDAp"},{"id":17,"t":"tvm","c":"NPER","q":"How many years are required to double an investment of ₹500 at an annual rate of 0.08?","k":"PU5QRVIoMC4wOCwgMCwgLTUwMCwgMTAwMCk="},{"id":18,"t":"tvm","c":"NPER","q":"How many years to pay off a ₹1,200 loan paying ₹300 every year at an interest rate of 0.05?","k":"PU5QRVIoMC4wNSwgLTMwMCwgMTIwMCk="},{"id":19,"t":"tvm","c":"NPER","q":"How many years will it take for ₹2,500 to grow to ₹5,000 at an annual rate of 0.07?","k":"PU5QRVIoMC4wNywgMCwgLTI1MDAsIDUwMDAp"},{"id":20,"t":"tvm","c":"NPER","q":"How many years to pay off a ₹10,000 loan at a rate of 0.09 paying ₹2,000 every year?","k":"PU5QRVIoMC4wOSwgLTIwMDAsIDEwMDAwKQ=="},{"id":21,"t":"tvm","c":"NPER","q":"How many years will it take ₹100 to grow to ₹300 at an annual interest rate of 0.12?","k":"PU5QRVIoMC4xMiwgMCwgLTEwMCwgMzAwKQ=="},{"id":22,"t":"tvm","c":"RATE","q":"Find the annual interest rate if an investment of ₹1,000 grows to ₹1,500 in 5 years.","k":"PVJBVEUoNSwgMCwgLTEwMDAsIDE1MDAp"},{"id":23,"t":"tvm","c":"RATE","q":"What annual rate doubles an initial investment of ₹2,000 in 8 years?","k":"PVJBVEUoOCwgMCwgLTIwMDAsIDQwMDAp"},{"id":24,"t":"tvm","c":"RATE","q":"Find the interest rate of a ₹4,000 loan repaid with ₹1,100 per year for 5 years.","k":"PVJBVEUoNSwgLTExMDAsIDQwMDAp"},{"id":25,"t":"tvm","c":"RATE","q":"What annual interest rate turns ₹500 into ₹800 in 4 years?","k":"PVJBVEUoNCwgMCwgLTUwMCwgODAwKQ=="},{"id":26,"t":"tvm","c":"RATE","q":"Find the annual interest rate if ₹10,000 grows to ₹14,000 in 6 years.","k":"PVJBVEUoNiwgMCwgLTEwMDAwLCAxNDAwMCk="},{"id":27,"t":"tvm","c":"RATE","q":"Find the rate on a loan of ₹1,000 repaid with ₹280 each year for 4 years.","k":"PVJBVEUoNCwgLTI4MCwgMTAwMCk="},{"id":28,"t":"tvm","c":"RATE","q":"What interest rate makes ₹3,000 grow to ₹4,500 in 7 years?","k":"PVJBVEUoNywgMCwgLTMwMDAsIDQ1MDAp"},{"id":29,"t":"tvm","c":"PMT","q":"Find the annual payment to repay a ₹10,000 loan over 5 years at an interest rate of 0.06.","k":"PVBNVCgwLjA2LCA1LCAxMDAwMCk="},{"id":30,"t":"tvm","c":"PMT","q":"What is the annual payment to pay off a ₹2,000 loan over 3 years at an interest rate of 0.05?","k":"PVBNVCgwLjA1LCAzLCAyMDAwKQ=="},{"id":31,"t":"tvm","c":"PMT","q":"Calculate the yearly payment for a ₹15,000 loan over 4 years at an annual rate of 0.07.","k":"PVBNVCgwLjA3LCA0LCAxNTAwMCk="},{"id":32,"t":"tvm","c":"PMT","q":"Find the annual payment to settle a ₹5,000 loan in 2 years at an interest rate of 0.08.","k":"PVBNVCgwLjA4LCAyLCA1MDAwKQ=="},{"id":33,"t":"tvm","c":"PMT","q":"What annual payment is needed to save a target of ₹10,000 in 5 years at a rate of 0.05?","k":"PVBNVCgwLjA1LCA1LCAwLCAxMDAwMCk="},{"id":34,"t":"tvm","c":"PMT","q":"Find the yearly installment for a ₹50,000 loan over 10 years at an interest rate of 0.06.","k":"PVBNVCgwLjA2LCAxMCwgNTAwMDAp"},{"id":35,"t":"tvm","c":"PMT","q":"What annual payment is required to save ₹5,000 over 4 years at an annual rate of 0.04?","k":"PVBNVCgwLjA0LCA0LCAwLCA1MDAwKQ=="},{"id":36,"t":"tvm","c":"FV Annuity Immediate","q":"Calculate the FV of depositing ₹100 at the END of each year for 5 years at a rate of 0.05.","k":"PUZWKDAuMDUsIDUsIC0xMDAsIDAsIDAp"},{"id":37,"t":"tvm","c":"FV Annuity Immediate","q":"Find the FV of saving ₹200 at the END of each year for 4 years at an interest rate of 0.06.","k":"PUZWKDAuMDYsIDQsIC0yMDAsIDAsIDAp"},{"id":38,"t":"tvm","c":"FV Annuity Immediate","q":"Calculate the FV of depositing ₹500 at the END of each year for 3 years at a rate of 0.07.","k":"PUZWKDAuMDcsIDMsIC01MDAsIDAsIDAp"},{"id":39,"t":"tvm","c":"FV Annuity Immediate","q":"Find the FV of saving ₹1,000 at the END of each year for 10 years at a rate of 0.08.","k":"PUZWKDAuMDgsIDEwLCAtMTAwMCwgMCwgMCk="},{"id":40,"t":"tvm","c":"FV Annuity Immediate","q":"Calculate the terminal value of ₹50 saved at the END of each year for 6 years at a rate of 0.04.","k":"PUZWKDAuMDQsIDYsIC01MCwgMCwgMCk="},{"id":41,"t":"tvm","c":"FV Annuity Immediate","q":"Find the FV of depositing ₹250 at the END of each year for 5 years at an interest rate of 0.09.","k":"PUZWKDAuMDksIDUsIC0yNTAsIDAsIDAp"},{"id":42,"t":"tvm","c":"FV Annuity Immediate","q":"What is the FV of saving ₹1,500 at the END of each year for 4 years at a rate of 0.05?","k":"PUZWKDAuMDUsIDQsIC0xNTAwLCAwLCAwKQ=="},{"id":43,"t":"tvm","c":"FV Annuity Due","q":"Calculate the FV of depositing ₹100 at the START of each year for 5 years at a rate of 0.05.","k":"PUZWKDAuMDUsIDUsIC0xMDAsIDAsIDEp"},{"id":44,"t":"tvm","c":"FV Annuity Due","q":"Find the FV of saving ₹200 at the START of each year for 4 years at an interest rate of 0.06.","k":"PUZWKDAuMDYsIDQsIC0yMDAsIDAsIDEp"},{"id":45,"t":"tvm","c":"FV Annuity Due","q":"Calculate the FV of depositing ₹500 at the START of each year for 3 years at a rate of 0.07.","k":"PUZWKDAuMDcsIDMsIC01MDAsIDAsIDEp"},{"id":46,"t":"tvm","c":"FV Annuity Due","q":"Find the FV of saving ₹1,000 at the START of each year for 10 years at a rate of 0.08.","k":"PUZWKDAuMDgsIDEwLCAtMTAwMCwgMCwgMSk="},{"id":47,"t":"tvm","c":"FV Annuity Due","q":"Calculate the terminal value of ₹50 saved at the START of each year for 6 years at a rate of 0.04.","k":"PUZWKDAuMDQsIDYsIC01MCwgMCwgMSk="},{"id":48,"t":"tvm","c":"FV Annuity Due","q":"Find the FV of depositing ₹250 at the START of each year for 5 years at an interest rate of 0.09.","k":"PUZWKDAuMDksIDUsIC0yNTAsIDAsIDEp"},{"id":49,"t":"tvm","c":"FV Annuity Due","q":"What is the FV of saving ₹1,500 at the START of each year for 4 years at a rate of 0.05?","k":"PUZWKDAuMDUsIDQsIC0xNTAwLCAwLCAxKQ=="},{"id":50,"t":"tvm","c":"FV Annuity Due","q":"Calculate the FV of depositing ₹300 at the START of each year for 2 years at an interest rate of 0.10.","k":"PUZWKDAuMTAsIDIsIC0zMDAsIDAsIDEp"},{"id":51,"t":"py","c":"String Addition","q":"Given s1 = 'financial' and s2 = 'analytics' (as in PPT), concatenate them using +.","k":"czEgPSAnZmluYW5jaWFsJwpzMiA9ICdhbmFseXRpY3MnCnJlc3VsdCA9IHMxICsgczIKcHJpbnQocmVzdWx0KQ=="},{"id":52,"t":"py","c":"String Addition","q":"Combine string 'data' and string 'science' using the + operator.","k":"cmVzdWx0ID0gJ2RhdGEnICsgJ3NjaWVuY2UnCnByaW50KHJlc3VsdCk="},{"id":53,"t":"py","c":"String Addition","q":"Given s1 = 'Python' and s2 = 'Programming', join them with a space.","k":"cmVzdWx0ID0gJ1B5dGhvbicgKyAnICcgKyAnUHJvZ3JhbW1pbmcnCnByaW50KHJlc3VsdCk="},{"id":54,"t":"py","c":"String Addition","q":"Given brand = 'Apple' and sector = 'Tech', join them into 'Apple Tech'.","k":"cmVzdWx0ID0gJ0FwcGxlJyArICcgJyArICdUZWNoJwpwcmludChyZXN1bHQp"},{"id":55,"t":"py","c":"String Addition","q":"Given a = 'Hello' and b = 'World', combine them into 'Hello World'.","k":"cmVzdWx0ID0gJ0hlbGxvJyArICcgJyArICdXb3JsZCcKcHJpbnQocmVzdWx0KQ=="},{"id":56,"t":"py","c":"String Multiplication","q":"Given s = 'financial' (as in PPT), repeat the string 3 times using *.","k":"cyA9ICdmaW5hbmNpYWwnCnJlc3VsdCA9IHMgKiAzCnByaW50KHJlc3VsdCk="},{"id":57,"t":"py","c":"String Multiplication","q":"Repeat the string 'code' 2 times using *.","k":"cmVzdWx0ID0gJ2NvZGUnICogMgpwcmludChyZXN1bHQp"},{"id":58,"t":"py","c":"String Multiplication","q":"Create a border line of 10 asterisks '*' using string multiplication.","k":"cmVzdWx0ID0gJyonICogMTAKcHJpbnQocmVzdWx0KQ=="},{"id":59,"t":"py","c":"String Multiplication","q":"Repeat the string 'Go' 4 times using string multiplication.","k":"cmVzdWx0ID0gJ0dvJyAqIDQKcHJpbnQocmVzdWx0KQ=="},{"id":60,"t":"py","c":"String Multiplication","q":"Repeat the dash '-' 8 times using *.","k":"cmVzdWx0ID0gJy0nICogOApwcmludChyZXN1bHQp"},{"id":61,"t":"py","c":"Arithmetic Addition","q":"Given a = 5 and b = 3 (as in PPT), calculate their addition.","k":"YSA9IDUKYiA9IDMKcmVzdWx0ID0gYSArIGIKcHJpbnQocmVzdWx0KQ=="},{"id":62,"t":"py","c":"Arithmetic Addition","q":"Given x = 5 and y = 10 (as in slide 5), print the sum x + y.","k":"eCA9IDUKeSA9IDEwCnByaW50KHggKyB5KQ=="},{"id":63,"t":"py","c":"Arithmetic Addition","q":"Add numbers 20 and 30 using the + operator.","k":"cmVzdWx0ID0gMjAgKyAzMApwcmludChyZXN1bHQp"},{"id":64,"t":"py","c":"Arithmetic Addition","q":"Add float 2.5 and float 3.5.","k":"cmVzdWx0ID0gMi41ICsgMy41CnByaW50KHJlc3VsdCk="},{"id":65,"t":"py","c":"Arithmetic Subtraction","q":"Given a = 5 and b = 3 (as in PPT), calculate a - b.","k":"YSA9IDUKYiA9IDMKcmVzdWx0ID0gYSAtIGIKcHJpbnQocmVzdWx0KQ=="},{"id":66,"t":"py","c":"Arithmetic Subtraction","q":"Subtract 10 from 25 using the - operator.","k":"cmVzdWx0ID0gMjUgLSAxMApwcmludChyZXN1bHQp"},{"id":67,"t":"py","c":"Arithmetic Subtraction","q":"Given revenue = 100 and cost = 40, find profit using subtraction.","k":"cmV2ZW51ZSA9IDEwMApjb3N0ID0gNDAKcHJvZml0ID0gcmV2ZW51ZSAtIGNvc3QKcHJpbnQocHJvZml0KQ=="},{"id":68,"t":"py","c":"Arithmetic Subtraction","q":"Subtract 7 from 4 to produce a negative result.","k":"cmVzdWx0ID0gNCAtIDcKcHJpbnQocmVzdWx0KQ=="},{"id":69,"t":"py","c":"Arithmetic Multiplication","q":"Given a = 5 and b = 3 (as in PPT), calculate a * b.","k":"YSA9IDUKYiA9IDMKcmVzdWx0ID0gYSAqIGIKcHJpbnQocmVzdWx0KQ=="},{"id":70,"t":"py","c":"Arithmetic Multiplication","q":"Multiply 8 by 4 using the * operator.","k":"cmVzdWx0ID0gOCAqIDQKcHJpbnQocmVzdWx0KQ=="},{"id":71,"t":"py","c":"Arithmetic Multiplication","q":"Given price = 50 and quantity = 3, calculate the total cost.","k":"cHJpY2UgPSA1MApxdWFudGl0eSA9IDMKdG90YWwgPSBwcmljZSAqIHF1YW50aXR5CnByaW50KHRvdGFsKQ=="},{"id":72,"t":"py","c":"Arithmetic Multiplication","q":"Multiply 12 by 0.","k":"cmVzdWx0ID0gMTIgKiAwCnByaW50KHJlc3VsdCk="},{"id":73,"t":"py","c":"Arithmetic Division","q":"Given a = 5 and b = 3 (as in PPT), calculate a / b.","k":"YSA9IDUKYiA9IDMKcmVzdWx0ID0gYSAvIGIKcHJpbnQocmVzdWx0KQ=="},{"id":74,"t":"py","c":"Arithmetic Division","q":"Divide 10 by 2 using the / operator.","k":"cmVzdWx0ID0gMTAgLyAyCnByaW50KHJlc3VsdCk="},{"id":75,"t":"py","c":"Arithmetic Division","q":"Divide 9 by 4 using the / operator.","k":"cmVzdWx0ID0gOSAvIDQKcHJpbnQocmVzdWx0KQ=="},{"id":76,"t":"py","c":"Arithmetic Division","q":"Divide 20 by 5 using the / operator.","k":"cmVzdWx0ID0gMjAgLyA1CnByaW50KHJlc3VsdCk="},{"id":77,"t":"py","c":"Arithmetic Division","q":"Divide 1 by 2.","k":"cmVzdWx0ID0gMSAvIDIKcHJpbnQocmVzdWx0KQ=="},{"id":78,"t":"py","c":"Arithmetic Floor Division","q":"Given a = 5 and b = 3 (as in PPT), calculate floor division a // b.","k":"YSA9IDUKYiA9IDMKcmVzdWx0ID0gYSAvLyBiCnByaW50KHJlc3VsdCk="},{"id":79,"t":"py","c":"Arithmetic Floor Division","q":"Divide 11 by 4 using floor division //.","k":"cmVzdWx0ID0gMTEgLy8gNApwcmludChyZXN1bHQp"},{"id":80,"t":"py","c":"Arithmetic Floor Division","q":"Divide 19 by 5 using floor division //.","k":"cmVzdWx0ID0gMTkgLy8gNQpwcmludChyZXN1bHQp"},{"id":81,"t":"py","c":"Arithmetic Floor Division","q":"Divide 7 by 2 using floor division //.","k":"cmVzdWx0ID0gNyAvLyAyCnByaW50KHJlc3VsdCk="},{"id":82,"t":"py","c":"Arithmetic Floor Division","q":"Divide 100 by 30 using floor division //.","k":"cmVzdWx0ID0gMTAwIC8vIDMwCnByaW50KHJlc3VsdCk="},{"id":83,"t":"py","c":"Arithmetic Exponentiation","q":"Given a = 2 and b = 3 (as in PPT), calculate a ** b.","k":"YSA9IDIKYiA9IDMKcmVzdWx0ID0gYSAqKiBiCnByaW50KHJlc3VsdCk="},{"id":84,"t":"py","c":"Arithmetic Exponentiation","q":"Calculate 3 raised to the power 2 using **.","k":"cmVzdWx0ID0gMyAqKiAyCnByaW50KHJlc3VsdCk="},{"id":85,"t":"py","c":"Arithmetic Exponentiation","q":"Calculate 5 squared using **.","k":"cmVzdWx0ID0gNSAqKiAyCnByaW50KHJlc3VsdCk="},{"id":86,"t":"py","c":"Arithmetic Exponentiation","q":"Calculate 2 to the power 4 using **.","k":"cmVzdWx0ID0gMiAqKiA0CnByaW50KHJlc3VsdCk="},{"id":87,"t":"py","c":"Arithmetic Exponentiation","q":"Calculate 10 to the power 3 using **.","k":"cmVzdWx0ID0gMTAgKiogMwpwcmludChyZXN1bHQp"},{"id":88,"t":"py","c":"Creating List","q":"Create the list thislist = ['Apple', 'Google', 'Amazon'] (from PPT slide 29).","k":"dGhpc2xpc3QgPSBbJ0FwcGxlJywgJ0dvb2dsZScsICdBbWF6b24nXQpwcmludCh0aGlzbGlzdCk="},{"id":89,"t":"py","c":"Creating List","q":"Create a list named numbers with items 1, 2, 3.","k":"bnVtYmVycyA9IFsxLCAyLCAzXQpwcmludChudW1iZXJzKQ=="},{"id":90,"t":"py","c":"Creating List","q":"Create an empty list named my_list using square brackets.","k":"bXlfbGlzdCA9IFtdCnByaW50KG15X2xpc3Qp"},{"id":91,"t":"py","c":"Creating List","q":"Create a list named tech with ['Python', 'NumPy', 'Pandas'].","k":"dGVjaCA9IFsnUHl0aG9uJywgJ051bVB5JywgJ1BhbmRhcyddCnByaW50KHRlY2gp"},{"id":92,"t":"py","c":"Creating List","q":"Create a list using list() constructor from string 'cat'.","k":"bHN0ID0gbGlzdCgnY2F0JykKcHJpbnQobHN0KQ=="},{"id":93,"t":"py","c":"Creating Set","q":"Create the set thisset = {'Apple', 'Google', 'Amazon'} (from PPT slide 31).","k":"dGhpc3NldCA9IHsnQXBwbGUnLCAnR29vZ2xlJywgJ0FtYXpvbid9CnByaW50KHRoaXNzZXQp"},{"id":94,"t":"py","c":"Creating Set","q":"Remove duplicates from ['Apple', 'Apple', 'Google'] by converting it to a set (as in PPT slide 34).","k":"bXlfbGlzdCA9IFsnQXBwbGUnLCAnQXBwbGUnLCAnR29vZ2xlJ10KdGhpc3NldCA9IHNldChteV9saXN0KQpwcmludCh0aGlzc2V0KQ=="},{"id":95,"t":"py","c":"Creating Set","q":"Create an empty set named empty_set using set().","k":"ZW1wdHlfc2V0ID0gc2V0KCkKcHJpbnQoZW1wdHlfc2V0KQ=="},{"id":96,"t":"py","c":"Creating Set","q":"Create a set named numbers with unique elements {1, 2, 3}.","k":"bnVtYmVycyA9IHsxLCAyLCAzfQpwcmludChudW1iZXJzKQ=="},{"id":97,"t":"py","c":"Creating Tuple","q":"Create the tuple thistuple = ('Apple', 'Google', 'Amazon', 'Apple', 'Google') (from PPT slide 32).","k":"dGhpc3R1cGxlID0gKCdBcHBsZScsICdHb29nbGUnLCAnQW1hem9uJywgJ0FwcGxlJywgJ0dvb2dsZScpCnByaW50KHRoaXN0dXBsZSk="},{"id":98,"t":"py","c":"Creating Tuple","q":"Create a tuple named coordinates with values (10, 20).","k":"Y29vcmRpbmF0ZXMgPSAoMTAsIDIwKQpwcmludChjb29yZGluYXRlcyk="},{"id":99,"t":"py","c":"Creating Tuple","q":"Create a single-element tuple containing the string 'Apple'.","k":"c2luZ2xlX3R1cGxlID0gKCdBcHBsZScsKQpwcmludChzaW5nbGVfdHVwbGUp"},{"id":100,"t":"py","c":"Creating Tuple","q":"Create an empty tuple named empty_t using parentheses.","k":"ZW1wdHlfdCA9ICgpCnByaW50KGVtcHR5X3Qp"}];
+
+/*XL-ENGINE-START*/
+/* =====================================================================
+   MINI EXCEL ENGINE — formulas behave like MS Excel
+   ===================================================================== */
+const XL = (() => {
+  class Problem extends Error {}
+  class XlErr { constructor(code) { this.code = code; } }
+  const ERR = c => new XlErr(c);
+  const isErr = v => v instanceof XlErr;
+
+  function tokenize(src) {
+    const t = []; let i = 0;
+    while (i < src.length) {
+      const ch = src[i];
+      if (/\s/.test(ch)) { i++; continue; }
+      if (/[0-9.]/.test(ch)) {
+        const m = /^(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/.exec(src.slice(i));
+        if (!m) throw new Problem('A number in the formula is not valid.');
+        t.push({ t: 'num', v: parseFloat(m[0]) }); i += m[0].length; continue;
+      }
+      if (/[A-Za-z_$]/.test(ch)) {
+        const m = /^[$A-Za-z_][$A-Za-z0-9_.]*/.exec(src.slice(i));
+        t.push({ t: 'id', v: m[0] }); i += m[0].length; continue;
+      }
+      if (ch === '"') {
+        let j = i + 1, s = '';
+        for (;;) {
+          if (j >= src.length) throw new Problem('A text value is missing its closing quote.');
+          if (src[j] === '"') { if (src[j + 1] === '"') { s += '"'; j += 2; continue; } break; }
+          s += src[j++];
+        }
+        t.push({ t: 'str', v: s }); i = j + 1; continue;
+      }
+      if ('+-*/^(),%&'.includes(ch)) { t.push({ t: ch }); i++; continue; }
+      throw new Problem('The formula contains a character Excel does not accept here: ' + ch);
+    }
+    return t;
+  }
+
+  function parse(tokens) {
+    let p = 0;
+    const peek = () => tokens[p];
+    const eat = type => { if (peek() && peek().t === type) return tokens[p++]; return null; };
+    const bad = () => new Problem('Check that every bracket is closed and arguments are separated by commas.');
+
+    function concat() { let l = additive(); while (eat('&')) l = { k: 'bin', op: '&', l, r: additive() }; return l; }
+    function additive() {
+      let l = mul();
+      for (;;) {
+        if (eat('+')) l = { k: 'bin', op: '+', l, r: mul() };
+        else if (eat('-')) l = { k: 'bin', op: '-', l, r: mul() };
+        else return l;
+      }
+    }
+    function mul() {
+      let l = pow();
+      for (;;) {
+        if (eat('*')) l = { k: 'bin', op: '*', l, r: pow() };
+        else if (eat('/')) l = { k: 'bin', op: '/', l, r: pow() };
+        else return l;
+      }
+    }
+    function pow() { let l = unary(); while (eat('^')) l = { k: 'bin', op: '^', l, r: unary() }; return l; }   // Excel: -2^2 = 4, 2^3^2 = 64
+    function unary() {
+      if (eat('-')) return { k: 'neg', x: unary() };
+      if (eat('+')) return { k: 'pos', x: unary() };
+      return postfix();
+    }
+    function postfix() { let x = primary(); while (eat('%')) x = { k: 'pct', x }; return x; }
+    function primary() {
+      const tk = peek();
+      if (!tk) throw bad();
+      if (tk.t === 'num') { p++; return { k: 'num', v: tk.v }; }
+      if (tk.t === 'str') { p++; return { k: 'str', v: tk.v }; }
+      if (tk.t === '(') { p++; const e = concat(); if (!eat(')')) throw bad(); return e; }
+      if (tk.t === 'id') {
+        p++;
+        if (peek() && peek().t === '(') {
+          p++;
+          const args = [];
+          if (!eat(')')) {
+            for (;;) {
+              if (peek() && (peek().t === ',' || peek().t === ')')) args.push(null); else args.push(concat());
+              if (eat(',')) continue;
+              if (eat(')')) break;
+              throw bad();
+            }
+          }
+          return { k: 'call', name: tk.v.toUpperCase(), args };
+        }
+        if (/^\$?[A-Za-z]{1,3}\$?\d+$/.test(tk.v)) throw new Problem('Cell references are not used in this test. Type the values directly inside the formula.');
+        return { k: 'name', v: tk.v };
+      }
+      throw bad();
+    }
+    const ast = concat();
+    if (p < tokens.length) throw bad();
+    return ast;
+  }
+
+  function toNum(v) {
+    if (v === null || v === undefined) return 0;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    if (typeof v === 'string') { const s = v.trim(); if (s !== '' && !isNaN(Number(s))) return Number(s); }
+    return ERR('#VALUE!');
+  }
+  function argNums(vals, defs) {
+    const out = [];
+    for (let i = 0; i < defs.length; i++) {
+      const v = i < vals.length ? vals[i] : null;
+      if (v === null) { out.push(defs[i]); continue; }
+      const x = toNum(v); if (isErr(x)) return x; out.push(x);
+    }
+    return out;
+  }
+  const clean = x => parseFloat(x.toPrecision(15));
+  function roundTo(x, d, mode) {
+    const m = Math.pow(10, d), y = clean(Math.abs(x) * m);
+    const r = mode === 'up' ? Math.ceil(y) : mode === 'down' ? Math.floor(y) : Math.round(y);
+    return Math.sign(x) * r / m;
+  }
+
+  function rate(n, p, pv, fv, ty, guess) {
+    if (n <= 0) return ERR('#NUM!');
+    const f = r => {
+      if (Math.abs(r) < 1e-12) return pv + p * n + fv;
+      const g = Math.pow(1 + r, n);
+      return pv * g + p * (1 + r * ty) * (g - 1) / r + fv;
+    };
+    let r = guess;
+    for (let i = 0; i < 100; i++) {
+      const h = 1e-7, d = (f(r + h) - f(r - h)) / (2 * h);
+      if (!isFinite(d) || d === 0) break;
+      let nr = r - f(r) / d;
+      if (nr <= -1) nr = (r - 1) / 2;
+      if (!isFinite(nr)) break;
+      if (Math.abs(nr - r) < 1e-13) return nr;
+      r = nr;
+    }
+    // fallback: scan for a sign change, then bisect
+    let lo = -0.99, flo = f(lo);
+    for (let x = -0.98; x <= 10; x += 0.01) {
+      const fx = f(x);
+      if (isFinite(flo) && isFinite(fx) && flo * fx <= 0) {
+        let a = lo, b = x, fa = flo;
+        for (let k = 0; k < 200; k++) { const mid = (a + b) / 2, fm = f(mid); if (fa * fm <= 0) b = mid; else { a = mid; fa = fm; } }
+        return (a + b) / 2;
+      }
+      lo = x; flo = fx;
+    }
+    return ERR('#NUM!');
+  }
+
+  const FN = {
+    FV:  { min: 3, max: 5, f: v => { const a = argNums(v, [0, 0, 0, 0, 0]); if (isErr(a)) return a; const [r, n, p, pv, t] = a, ty = t ? 1 : 0;
+             if (r === 0) return -(pv + p * n); const g = Math.pow(1 + r, n); return -(pv * g + p * (1 + r * ty) * (g - 1) / r); } },
+    PV:  { min: 3, max: 5, f: v => { const a = argNums(v, [0, 0, 0, 0, 0]); if (isErr(a)) return a; const [r, n, p, fv, t] = a, ty = t ? 1 : 0;
+             if (r === 0) return -(fv + p * n); const g = Math.pow(1 + r, n); return -(fv + p * (1 + r * ty) * (g - 1) / r) / g; } },
+    PMT: { min: 3, max: 5, f: v => { const a = argNums(v, [0, 0, 0, 0, 0]); if (isErr(a)) return a; const [r, n, pv, fv, t] = a, ty = t ? 1 : 0;
+             if (n === 0) return ERR('#NUM!'); if (r === 0) return -(pv + fv) / n;
+             const g = Math.pow(1 + r, n); return -(fv + pv * g) * r / ((1 + r * ty) * (g - 1)); } },
+    NPER:{ min: 3, max: 5, f: v => { const a = argNums(v, [0, 0, 0, 0, 0]); if (isErr(a)) return a; const [r, p, pv, fv, t] = a, ty = t ? 1 : 0;
+             if (r === 0) { if (p === 0) return ERR('#NUM!'); return -(pv + fv) / p; }
+             const pt = p * (1 + r * ty), den = pt + pv * r; if (den === 0) return ERR('#DIV/0!');
+             const ratio = (pt - fv * r) / den; if (!(ratio > 0) || r <= -1) return ERR('#NUM!');
+             return Math.log(ratio) / Math.log(1 + r); } },
+    RATE:{ min: 3, max: 6, f: v => { const a = argNums(v, [0, 0, 0, 0, 0, 0.1]); if (isErr(a)) return a; const [n, p, pv, fv, t, g] = a; return rate(n, p, pv, fv, t ? 1 : 0, g); } },
+    ABS: { min: 1, max: 1, f: v => { const x = toNum(v[0]); return isErr(x) ? x : Math.abs(x); } },
+    SQRT:{ min: 1, max: 1, f: v => { const x = toNum(v[0]); if (isErr(x)) return x; return x < 0 ? ERR('#NUM!') : Math.sqrt(x); } },
+    POWER:{min: 2, max: 2, f: v => { const a = argNums(v, [0, 0]); if (isErr(a)) return a; return pw(a[0], a[1]); } },
+    LN:  { min: 1, max: 1, f: v => { const x = toNum(v[0]); if (isErr(x)) return x; return x <= 0 ? ERR('#NUM!') : Math.log(x); } },
+    LOG: { min: 1, max: 2, f: v => { const a = argNums(v, [0, 10]); if (isErr(a)) return a; if (a[0] <= 0 || a[1] <= 0 || a[1] === 1) return ERR('#NUM!'); return Math.log(a[0]) / Math.log(a[1]); } },
+    EXP: { min: 1, max: 1, f: v => { const x = toNum(v[0]); return isErr(x) ? x : Math.exp(x); } },
+    ROUND:    { min: 2, max: 2, f: v => { const a = argNums(v, [0, 0]); return isErr(a) ? a : roundTo(a[0], Math.trunc(a[1]), 'near'); } },
+    ROUNDUP:  { min: 2, max: 2, f: v => { const a = argNums(v, [0, 0]); return isErr(a) ? a : roundTo(a[0], Math.trunc(a[1]), 'up'); } },
+    ROUNDDOWN:{ min: 2, max: 2, f: v => { const a = argNums(v, [0, 0]); return isErr(a) ? a : roundTo(a[0], Math.trunc(a[1]), 'down'); } },
+    SUM:    { min: 1, max: 255, f: v => { let s = 0; for (const x of v) { if (x === null) continue; const n = toNum(x); if (isErr(n)) return n; s += n; } return s; } },
+    AVERAGE:{ min: 1, max: 255, f: v => { let s = 0, c = 0; for (const x of v) { if (x === null) continue; const n = toNum(x); if (isErr(n)) return n; s += n; c++; } return c ? s / c : ERR('#DIV/0!'); } },
+    MAX:    { min: 1, max: 255, f: v => { let m = -Infinity; for (const x of v) { if (x === null) continue; const n = toNum(x); if (isErr(n)) return n; m = Math.max(m, n); } return m === -Infinity ? 0 : m; } },
+    MIN:    { min: 1, max: 255, f: v => { let m = Infinity; for (const x of v) { if (x === null) continue; const n = toNum(x); if (isErr(n)) return n; m = Math.min(m, n); } return m === Infinity ? 0 : m; } }
+  };
+  function pw(a, b) { if (a === 0 && b === 0) return ERR('#NUM!'); if (a === 0 && b < 0) return ERR('#DIV/0!'); const r = Math.pow(a, b); return isFinite(r) ? r : ERR('#NUM!'); }
+
+  function ev(n, fns) {
+    switch (n.k) {
+      case 'num': return n.v;
+      case 'str': return n.v;
+      case 'name': return ERR('#NAME?');
+      case 'neg': { const x = toNum(ev(n.x, fns)); return isErr(x) ? x : -x; }
+      case 'pos': return ev(n.x, fns);
+      case 'pct': { const x = toNum(ev(n.x, fns)); return isErr(x) ? x : x / 100; }
+      case 'bin': {
+        const L = ev(n.l, fns); if (isErr(L)) return L;
+        const R = ev(n.r, fns); if (isErr(R)) return R;
+        if (n.op === '&') return String(L) + String(R);
+        const a = toNum(L); if (isErr(a)) return a;
+        const b = toNum(R); if (isErr(b)) return b;
+        if (n.op === '+') return a + b;
+        if (n.op === '-') return a - b;
+        if (n.op === '*') return a * b;
+        if (n.op === '/') return b === 0 ? ERR('#DIV/0!') : a / b;
+        return pw(a, b);
+      }
+      case 'call': {
+        fns.push(n.name);
+        const def = FN[n.name];
+        const vals = n.args.map(a => (a === null ? null : ev(a, fns)));
+        if (!def) return ERR('#NAME?');
+        if (n.args.length < def.min) throw new Problem("You've entered too few arguments for " + n.name + '.');
+        if (n.args.length > def.max) throw new Problem("You've entered too many arguments for " + n.name + '.');
+        for (const x of vals) if (isErr(x)) return x;
+        return def.f(vals);
+      }
+    }
+    return ERR('#VALUE!');
+  }
+
+  const fmtGeneral = v => v === 0 ? '0' : Number(v.toPrecision(9)).toLocaleString('en-US', { maximumFractionDigits: 12, useGrouping: false });
+  const fmtRupee = v => (v < 0 ? '-' : '') + '\u20B9' + Math.abs(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function evaluate(text) {
+    const src = String(text == null ? '' : text).trim();
+    const out = { kind: 'empty', value: null, display: '', msg: '', fns: [], topFn: null };
+    if (!src) return out;
+    if (src[0] !== '=') {
+      const n = Number(src.replace(/,/g, ''));
+      if (src !== '' && !isNaN(n)) return Object.assign(out, { kind: 'num', value: n, display: fmtGeneral(n) });
+      return Object.assign(out, { kind: 'text', value: src, display: src });
+    }
+    try {
+      const body = src.slice(1);
+      if (!body.trim()) throw new Problem('Type a function or value after the = sign.');
+      const ast = parse(tokenize(body));
+      const fns = [];
+      let v = ev(ast, fns);
+      out.fns = fns; out.topFn = ast.k === 'call' ? ast.name : null;
+      if (typeof v === 'number' && !isFinite(v)) v = ERR('#NUM!');
+      if (isErr(v)) return Object.assign(out, { kind: 'error', value: v.code, display: v.code });
+      if (typeof v === 'string') return Object.assign(out, { kind: 'text', value: v, display: v });
+      const money = ['FV', 'PV', 'PMT'].includes(out.topFn);
+      return Object.assign(out, { kind: 'num', value: v, display: money ? fmtRupee(v) : fmtGeneral(v) });
+    } catch (e) {
+      if (e instanceof Problem) return Object.assign(out, { kind: 'invalid', msg: "There's a problem with this formula. " + e.message });
+      throw e;
+    }
+  }
+  return { evaluate };
+})();
+/*XL-ENGINE-END*/
+
+/*PY-START*/
+/* =====================================================================
+   PYTHON — real CPython (Pyodide) running inside a Web Worker
+   ===================================================================== */
+const PY_HELPER = String.raw`
+import sys, io, ast, json, re, traceback, builtins
+
+def __tvm_canon(v):
+    t = type(v).__name__
+    try:
+        if isinstance(v, (set, frozenset)):
+            return t + ':' + repr(sorted(repr(x) for x in v))
+        return t + ':' + repr(v)
+    except Exception:
+        return t + ':?'
+
+def __tvm_input(prompt=''):
+    raise EOFError('EOF when reading a line')
+
+def __tvm_run(code):
+    ns = {'__name__': '__main__', '__builtins__': builtins}
+    buf = io.StringIO()
+    old_out, old_err, old_in = sys.stdout, sys.stderr, builtins.input
+    sys.stdout = buf
+    sys.stderr = buf
+    builtins.input = __tvm_input
+    err = ''
+    ok = True
+    try:
+        exec(compile(code, 'main.py', 'exec'), ns)
+    except SystemExit:
+        pass
+    except BaseException as e:
+        ok = False
+        tb = e.__traceback__
+        tb = tb.tb_next if tb is not None else None
+        err = ''.join(traceback.format_exception(type(e), e, tb))
+        err = re.sub(r'  File "<exec>", line \d+, in __tvm_\w+\n(?:    .*\n)?', '', err)
+    finally:
+        sys.stdout, sys.stderr, builtins.input = old_out, old_err, old_in
+    found = {}
+    for k, v in list(ns.items()):
+        if k.startswith('__') or callable(v) or isinstance(v, type(sys)):
+            continue
+        found[k] = __tvm_canon(v)
+    last = None
+    if ok:
+        try:
+            tree = ast.parse(code)
+            if tree.body:
+                s = tree.body[-1]
+                if (isinstance(s, ast.Expr) and isinstance(s.value, ast.Call)
+                        and getattr(s.value.func, 'id', None) == 'print'
+                        and len(s.value.args) == 1 and not s.value.keywords):
+                    last = __tvm_canon(eval(compile(ast.Expression(s.value.args[0]), 'main.py', 'eval'), ns))
+        except Exception:
+            last = None
+    return json.dumps({'ok': ok, 'out': buf.getvalue(), 'err': err, 'vars': found, 'last': last})
+`;
+
+function workerMain() {
+  let pyodide = null;
+  self.onmessage = async (ev) => {
+    const m = ev.data;
+    try {
+      if (m.type === 'init') {
+        importScripts(m.indexURL + 'pyodide.js');
+        pyodide = await self.loadPyodide({ indexURL: m.indexURL });
+        await pyodide.runPythonAsync(m.helper);
+        self.postMessage({ type: 'ready' });
+      } else if (m.type === 'run') {
+        const fn = pyodide.globals.get('__tvm_run');
+        const data = fn(m.code);
+        if (fn.destroy) fn.destroy();
+        self.postMessage({ type: 'result', id: m.id, data: String(data) });
+      }
+    } catch (err) {
+      self.postMessage({ type: 'error', id: m.id, message: String((err && err.message) || err) });
+    }
+  };
+}
+
+const Py = (() => {
+  let worker = null, readyP = null, seq = 0, status = 'idle', statusMsg = '';
+  const pending = new Map(), listeners = new Set();
+  const setStatus = (s, msg) => { status = s; statusMsg = msg || ''; listeners.forEach(f => f(s, statusMsg)); };
+
+  function start() {
+    if (worker) { try { worker.terminate(); } catch (_) {} }
+    pending.forEach(p => p.resolve({ ok: false, out: '', err: '', timeout: true }));
+    pending.clear();
+    setStatus('loading');
+    let w;
+    try {
+      const url = URL.createObjectURL(new Blob(['(' + workerMain.toString() + ')()'], { type: 'text/javascript' }));
+      w = worker = new Worker(url);
+    } catch (e) {
+      setStatus('failed', 'This browser cannot run the Python engine.');
+      readyP = Promise.reject(e); readyP.catch(() => {});
+      return readyP;
+    }
+    readyP = new Promise((resolve, reject) => {
+      const fail = (msg) => { clearTimeout(to); setStatus('failed', msg); reject(new Error(msg)); };
+      const to = setTimeout(() => fail('The Python engine took too long to load.'), 120000);
+      w.onmessage = (ev) => {
+        if (w !== worker) return;
+        const m = ev.data;
+        if (m.type === 'ready') { clearTimeout(to); setStatus('ready'); resolve(true); }
+        else if (m.type === 'error' && m.id === undefined) fail(m.message);
+        else if (m.type === 'result') { const p = pending.get(m.id); if (p) { pending.delete(m.id); p.resolve(JSON.parse(m.data)); } }
+        else if (m.type === 'error') { const p = pending.get(m.id); if (p) { pending.delete(m.id); p.resolve({ ok: false, out: '', err: m.message }); } }
+      };
+      w.onerror = (e) => { if (w === worker) fail(e.message || 'The Python engine could not start.'); };
+    });
+    readyP.catch(() => {});
+    w.postMessage({ type: 'init', indexURL: CONFIG.PYODIDE_INDEX_URL, helper: PY_HELPER });
+    return readyP;
+  }
+
+  async function run(code, timeoutMs) {
+    try { await readyP; } catch (e) { return { ok: false, out: '', err: 'The Python engine is not available. Reload the page and try again.', engine: true }; }
+    const id = ++seq;
+    return new Promise(resolve => {
+      const timer = setTimeout(() => {
+        if (pending.has(id)) { pending.delete(id); resolve({ ok: false, out: '', err: '', timeout: true }); start(); }
+      }, timeoutMs);
+      pending.set(id, { resolve: v => { clearTimeout(timer); resolve(v); } });
+      worker.postMessage({ type: 'run', id, code });
+    });
+  }
+  return { start, run, ready: () => readyP, onStatus: f => { listeners.add(f); f(status, statusMsg); }, get status() { return status; } };
+})();
+/*PY-END*/
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const b64 = s => new TextDecoder().decode(Uint8Array.from(atob(s), c => c.charCodeAt(0)));
+const modelAnswer = q => (q.a !== undefined ? q.a : b64(q.k));
+const qById = id => BANK.find(q => q.id === id);
+const TOTAL_Q = CONFIG.TVM_QUESTIONS + CONFIG.PYTHON_QUESTIONS;
+const DURATION_MS = CONFIG.DURATION_MINUTES * 60 * 1000;
+const STORE_KEY = 'tvmpy_test_state_v1';
+
+function rnd(n) { const b = new Uint32Array(1), lim = Math.floor(0x100000000 / n) * n; let x; do { crypto.getRandomValues(b); x = b[0]; } while (x >= lim); return x % n; }
+function pick(arr, n) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); }
+function buildPaper() {
+  const tvm = BANK.filter(q => q.t === 'tvm'), py = BANK.filter(q => q.t === 'py');
+  return [...pick(tvm, CONFIG.TVM_QUESTIONS), ...pick(py, CONFIG.PYTHON_QUESTIONS)].map(q => q.id);
+}
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+const pad = n => String(n).padStart(2, '0');
+const mmss = sec => pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
+const fmtTaken = sec => Math.floor(sec / 60) + ' min ' + (sec % 60) + ' sec';
+const configured = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CONFIG.SCRIPT_URL);
+
+let state = null;
+function saveState() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (_) {} }
+function loadState() { try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); return s && s.v === 1 ? s : null; } catch (_) { return null; } }
+function clearState() { try { localStorage.removeItem(STORE_KEY); } catch (_) {} }
+
+function show(name) { ['start', 'test', 'result'].forEach(n => { $('#screen-' + n).hidden = n !== name; }); window.scrollTo(0, 0); }
+function busy(text) { $('#busy-text').textContent = text; $('#busy').hidden = false; }
+function unbusy() { $('#busy').hidden = true; }
+
+let modalOpen = false;
+function modal({ title, text, actions, kind }) {
+  return new Promise(resolve => {
+    modalOpen = true;
+    const root = $('#modal-root');
+    root.innerHTML = '<div class="modal-bg"><div class="modal ' + (kind || '') + '" role="dialog" aria-modal="true" aria-labelledby="m-title"><h2 id="m-title">' + esc(title) + '</h2><p>' + esc(text) + '</p><div class="acts"></div></div></div>';
+    const acts = $('.acts', root);
+    actions.forEach((a, i) => {
+      const b = document.createElement('button');
+      b.className = 'btn ' + (a.kind || ''); b.textContent = a.label;
+      b.onclick = () => { root.innerHTML = ''; modalOpen = false; resolve(a.value); };
+      acts.appendChild(b);
+      if (i === actions.length - 1) setTimeout(() => b.focus(), 0);
+    });
+  });
+}
+function closeModal() { $('#modal-root').innerHTML = ''; modalOpen = false; }
+
+/* ---------- Google Sheet ---------- */
+async function postToSheet(payload, timeoutMs) {
+  if (!configured()) return { ok: false, notConfigured: true };
+  const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), timeoutMs || 20000);
+  try {
+    const res = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), signal: ctrl.signal });
+    return await res.json();
+  } catch (e) { return { ok: false, error: String(e) }; }
+  finally { clearTimeout(to); }
+}
+function notify(extra) {
+  if (!configured() || !state) return;
+  const body = JSON.stringify(Object.assign({
+    attemptId: state.attemptId, reg: state.reg, name: state.name,
+    tabSwitches: state.tabSwitches, malpractice: state.malpractice ? 'Yes' : 'No'
+  }, extra));
+  let ok = false;
+  try { if (navigator.sendBeacon) ok = navigator.sendBeacon(CONFIG.SCRIPT_URL, new Blob([body], { type: 'text/plain;charset=UTF-8' })); } catch (_) {}
+  if (!ok) { try { fetch(CONFIG.SCRIPT_URL, { method: 'POST', body, keepalive: true, mode: 'no-cors' }); } catch (_) {} }
+}
+
+/* =====================================================================
+   START SCREEN
+   ===================================================================== */
+function initStart() {
+  $('#test-title').textContent = CONFIG.TEST_TITLE;
+  $('#bar-a').textContent = CONFIG.TVM_QUESTIONS + ' Excel questions';
+  $('#bar-b').textContent = CONFIG.PYTHON_QUESTIONS + ' Python questions';
+  $('#test-lede').textContent = TOTAL_Q + ' questions, ' + CONFIG.DURATION_MINUTES + ' minutes, ' + CONFIG.MARKS_PER_QUESTION + ' mark each.';
+  $('#rules').innerHTML = [
+    '<b>Excel questions:</b> type the formula in the formula bar exactly as you would in MS Excel (start with =) and press Enter to see the result.',
+    '<b>Python questions:</b> write your program, press Run, and use <b>print()</b> to show the answer.',
+    'Answers save as you type and you can move between questions freely.',
+    'The timer starts when you press <b>Start test now</b> and cannot be paused. The test submits itself when time is up.',
+    '<b>Do not close, reload or leave this tab.</b> Closing the page is reported as suspected malpractice and every tab switch is counted.'
+  ].map(t => '<li>' + t + '</li>').join('');
+
+  Py.onStatus((s, msg) => {
+    const dot = $('#py-dot'), txt = $('#py-status'), btn = $('#start-btn');
+    dot.className = 'dot' + (s === 'ready' ? ' ready' : s === 'failed' ? ' failed' : '');
+    txt.textContent = s === 'ready' ? 'Python engine ready.' : s === 'failed' ? 'Python engine failed to load. ' + (msg || '') : 'Loading the Python engine (first load can take a minute)…';
+    $('#py-retry').hidden = s !== 'failed';
+    btn.disabled = s !== 'ready';
+  });
+  $('#py-retry').onclick = () => Py.start();
+  $('#start-form').addEventListener('submit', onStart);
+  show('start');
+  $('#reg').focus();
+}
+
+async function onStart(e) {
+  e.preventDefault();
+  const reg = $('#reg').value.trim().toUpperCase().replace(/\s+/g, '');
+  const name = $('#sname').value.trim().replace(/\s+/g, ' ');
+  let bad = false;
+  $('#reg-err').textContent = ''; $('#name-err').textContent = ''; $('#form-error').hidden = true;
+  if (!/^[A-Z0-9][A-Z0-9\-\/_.]{2,19}$/.test(reg)) { $('#reg-err').textContent = 'Enter your register number (3 to 20 letters or digits).'; bad = true; }
+  if (name.length < 2 || !/^[\p{L}][\p{L}\s.'\-]*$/u.test(name)) { $('#name-err').textContent = 'Enter your full name using letters only.'; bad = true; }
+  if (bad) return;
+
+  const btn = $('#start-btn');
+  btn.disabled = true; btn.textContent = 'Starting…';
+  const attemptId = uuid();
+  if (configured()) {
+    const res = await postToSheet({ action: 'start', attemptId, reg, name, block: CONFIG.BLOCK_REPEAT_ATTEMPTS }, 9000);
+    if (res && res.ok && res.allowed === false) {
+      const fe = $('#form-error'); fe.textContent = res.reason || 'This register number has already been used. Please tell your invigilator.'; fe.hidden = false;
+      btn.disabled = false; btn.textContent = 'Start test now';
+      return;
+    }
+  }
+  const now = Date.now();
+  state = {
+    v: 1, phase: 'running', attemptId, reg, name, qids: buildPaper(), answers: {}, cur: 0,
+    startTs: now, deadline: now + DURATION_MS, tabSwitches: 0, malpractice: false, closedCount: 0, result: null, saved: false
+  };
+  saveState();
+  btn.textContent = 'Start test now';
+  beginTest();
+}
+
+/* =====================================================================
+   TEST SCREEN
+   ===================================================================== */
+const runtime = { xlCommitted: {}, pyOut: {} };
+let timerId = null, submitting = false, away = false, lastUnloadAttempt = 0;
+
+function beginTest() {
+  submitting = false; away = false;
+  $('#who-name').textContent = state.name;
+  $('#who-reg').textContent = 'Register no. ' + state.reg;
+  $('#resume-note').hidden = !(state.closedCount > 0);
+  $('#pal-xl-title').textContent = 'Excel (Q1 to Q' + CONFIG.TVM_QUESTIONS + ')';
+  $('#pal-py-title').textContent = 'Python (Q' + (CONFIG.TVM_QUESTIONS + 1) + ' to Q' + TOTAL_Q + ')';
+  buildPalette(); updateChip(); show('test'); renderQuestion(state.cur || 0); startTimer();
+}
+
+function buildPalette() {
+  ['xl', 'py'].forEach(sec => { $('#pal-' + sec).innerHTML = ''; });
+  state.qids.forEach((id, i) => {
+    const q = qById(id), sec = q.t === 'tvm' ? 'xl' : 'py';
+    const b = document.createElement('button');
+    b.className = 'pbtn sec-' + sec; b.textContent = i + 1; b.dataset.i = i;
+    b.setAttribute('aria-label', 'Go to question ' + (i + 1));
+    b.onclick = () => renderQuestion(i);
+    $('#pal-' + sec).appendChild(b);
+  });
+  updatePalette();
+}
+function isAnswered(id) { return (state.answers[id] || '').trim() !== ''; }
+function updatePalette() {
+  document.querySelectorAll('.pbtn').forEach(b => {
+    const i = +b.dataset.i, id = state.qids[i];
+    b.classList.toggle('done', isAnswered(id));
+    b.classList.toggle('cur', i === state.cur);
+  });
+}
+function updateChip() {
+  const c = $('#tab-chip'); c.textContent = 'Tab switches: ' + state.tabSwitches; c.classList.toggle('hot', state.tabSwitches > 0);
+}
+
+function startTimer() { clearInterval(timerId); tick(); timerId = setInterval(tick, 250); }
+function tick() {
+  if (!state || state.phase !== 'running') return;
+  const rem = state.deadline - Date.now();
+  if (rem <= 0) { $('#timer').textContent = '00:00'; $('#bar').style.width = '0%'; clearInterval(timerId); submitTest('timeout'); return; }
+  const sec = Math.ceil(rem / 1000), t = $('#timer'), bar = $('#bar');
+  t.textContent = mmss(sec);
+  const cls = sec <= 60 ? 'danger' : sec <= 300 ? 'warn' : '';
+  t.className = 'timer ' + cls; bar.className = cls;
+  bar.style.width = (rem / DURATION_MS * 100) + '%';
+}
+
+function renderQuestion(i) {
+  state.cur = i; saveState(); updatePalette();
+  const id = state.qids[i], q = qById(id), isXl = q.t === 'tvm';
+  const card = $('#qcard');
+  card.innerHTML =
+    '<div class="qhead"><span class="badge ' + (isXl ? 'xl' : 'py') + '">' + (isXl ? 'Excel · ' : 'Python · ') + esc(q.c) + '</span>' +
+    '<span class="qnum">Question ' + (i + 1) + ' of ' + TOTAL_Q + '</span></div>' +
+    '<p class="qtext" id="qtext"></p><div id="work"></div>' +
+    '<div class="qnav"><button class="btn" id="prev">Previous</button><button class="btn" id="next">Next</button></div>';
+  $('#qtext').textContent = q.q;
+  $('#prev').disabled = i === 0;
+  $('#next').disabled = i === state.qids.length - 1;
+  $('#prev').onclick = () => renderQuestion(i - 1);
+  $('#next').onclick = () => renderQuestion(i + 1);
+  if (isXl) renderExcel(id); else renderPython(id);
+}
+
+function setAnswer(id, val) { state.answers[id] = val; saveState(); updatePalette(); }
+
+/* ---------- Excel question UI ---------- */
+function renderExcel(id) {
+  const rows = [1, 2, 3, 4, 5].map(r => '<tr><th class="rh">' + r + '</th>' + (r === 1 ? '<td class="sel"><div id="xl-a1"></div></td>' : '<td></td>') + '<td></td><td></td><td></td><td></td><td></td></tr>').join('');
+  $('#work').innerHTML =
+    '<div class="xlbar"><div class="namebox">A1</div><div class="fxl">fx</div>' +
+    '<input id="xl-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type a formula, for example =SUM(2,3)" aria-label="Formula bar">' +
+    '<button id="xl-run" type="button">Enter</button></div>' +
+    '<div class="xlgrid"><table><thead><tr><th class="rh"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="xlmsg" id="xl-msg"></div>';
+  const inp = $('#xl-input');
+  inp.value = state.answers[id] || '';
+  inp.addEventListener('input', () => setAnswer(id, inp.value));
+  const commit = () => { runtime.xlCommitted[id] = inp.value; showExcel(id); };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+  $('#xl-run').onclick = () => { commit(); inp.focus(); };
+  showExcel(id);
+  inp.focus();
+}
+function showExcel(id) {
+  const cell = $('#xl-a1'), msg = $('#xl-msg');
+  if (!cell) return;
+  cell.textContent = ''; cell.className = ''; msg.textContent = ''; msg.className = 'xlmsg';
+  const text = runtime.xlCommitted[id];
+  if (text === undefined) return;
+  const r = XL.evaluate(text);
+  if (r.kind === 'invalid') { msg.classList.add('bad'); msg.textContent = r.msg; return; }
+  cell.textContent = r.display;
+  cell.className = r.kind === 'num' ? 'num' : r.kind === 'error' ? 'err' : '';
+}
+
+/* ---------- Python question UI ---------- */
+function renderPython(id) {
+  $('#work').innerHTML =
+    '<div class="pytool"><span>main.py</span><div class="btns"><button class="btn py" id="py-run" type="button">Run</button><button class="btn" id="py-clear" type="button">Clear output</button></div></div>' +
+    '<textarea class="code" id="py-code" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Python code" placeholder="# Write your Python code here. Use print() to show the answer.\n# Ctrl+Enter runs the program."></textarea>' +
+    '<div class="outlabel">Output</div><pre class="out" id="py-out" aria-live="polite"></pre>';
+  const ta = $('#py-code');
+  ta.value = state.answers[id] || '';
+  ta.addEventListener('input', () => setAnswer(id, ta.value));
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = ta.selectionStart, en = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(en);
+      ta.selectionStart = ta.selectionEnd = s + 4;
+      setAnswer(id, ta.value);
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runPython(id); }
+  });
+  $('#py-run').onclick = () => runPython(id);
+  $('#py-clear').onclick = () => { delete runtime.pyOut[id]; drawPyOut(id); };
+  drawPyOut(id);
+  ta.focus();
+}
+function drawPyOut(id) {
+  const out = $('#py-out'); if (!out) return;
+  const r = runtime.pyOut[id];
+  out.className = 'out' + (r && r.isErr ? ' err' : '');
+  if (!r) { out.innerHTML = '<span class="muted">Run your program to see its output here.</span>'; return; }
+  if (r.running) { out.innerHTML = '<span class="muted">Running…</span>'; return; }
+  if (r.text === '') { out.innerHTML = '<span class="muted">(the program finished with no output)</span>'; return; }
+  out.textContent = r.text;
+}
+async function runPython(id) {
+  const btn = $('#py-run'); if (btn) btn.disabled = true;
+  runtime.pyOut[id] = { running: true }; drawPyOut(id);
+  const r = await Py.run(state.answers[id] || '', CONFIG.PYTHON_TIMEOUT_MS);
+  let text = r.out || '', isErr = !r.ok;
+  if (r.timeout) { text = 'Stopped: the program ran for more than ' + Math.round(CONFIG.PYTHON_TIMEOUT_MS / 1000) + ' seconds (check for an infinite loop).'; isErr = true; }
+  else if (r.err) text += (text && !text.endsWith('\n') ? '\n' : '') + r.err.replace(/\s+$/, '');
+  runtime.pyOut[id] = { text, isErr };
+  if (state && state.qids[state.cur] === id) { drawPyOut(id); const b = $('#py-run'); if (b) b.disabled = false; }
+}
+
+/* =====================================================================
+   GRADING
+   ===================================================================== */
+const nearNum = (a, b) => Math.abs(a - b) <= (Math.abs(b) >= 1 ? 0.005 : 0.00006);
+function gradeExcel(q, text) {
+  const got = XL.evaluate(text), exp = XL.evaluate(modelAnswer(q));
+  if (got.kind !== 'num') return false;
+  if (CONFIG.REQUIRE_EXPECTED_FUNCTION && exp.topFn && !got.fns.includes(exp.topFn)) return false;
+  return nearNum(got.value, exp.value) || (CONFIG.ACCEPT_EITHER_SIGN && nearNum(-got.value, exp.value));
+}
+
+const OP = '[\\w\\)\\]"]\\s*';
+const AFTER = '\\s*[\\w\\("\\[\\-+]';
+const PY_NEED = {
+  'String Addition': new RegExp(OP + '\\+' + AFTER),
+  'Arithmetic Addition': new RegExp(OP + '\\+' + AFTER),
+  'Arithmetic Subtraction': new RegExp(OP + '-' + AFTER),
+  'String Multiplication': new RegExp(OP + '\\*(?!\\*)' + AFTER),
+  'Arithmetic Multiplication': new RegExp(OP + '\\*(?!\\*)' + AFTER),
+  'Arithmetic Division': new RegExp(OP + '\\/(?!\\/)' + AFTER),
+  'Arithmetic Floor Division': new RegExp(OP + '\\/\\/' + AFTER),
+  'Arithmetic Exponentiation': new RegExp(OP + '\\*\\*' + AFTER),
+  'Creating List': /\[|list\s*\(/,
+  'Creating Set': /\{|set\s*\(/,
+  'Creating Tuple': /tuple\s*\(|\(\s*\)|,/
+};
+function stripStrings(code) {
+  return code
+    .replace(/('''[\s\S]*?'''|"""[\s\S]*?"""|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*")/g, '""')
+    .replace(/#.*$/gm, '');
+}
+const normOut = s => s.replace(/\r/g, '').split('\n').map(l => l.replace(/\s+$/, '')).join('\n').trim();
+function setCanon(s) {
+  s = s.trim();
+  if (s === 'set()') return '';
+  const m = /^\{([^{}:]*)\}$/.exec(s);
+  if (!m || s === '{}') return null;
+  return m[1].split(',').map(x => x.trim()).filter(Boolean).sort().join('|');
+}
+function outMatches(got, want) {
+  const a = normOut(got), b = normOut(want);
+  if (a === b) return true;
+  const sa = setCanon(a), sb = setCanon(b);
+  if (sa !== null && sb !== null && sa === sb) return true;
+  if (b && !a.includes('\n') && !b.includes('\n') && a.length > b.length && a.endsWith(b) && /[\s:=]/.test(a[a.length - b.length - 1])) return true;   // "Result: 8"
+  return false;
+}
+const pyExpected = {};
+async function gradePython(q, code) {
+  if (!pyExpected[q.id]) pyExpected[q.id] = await Py.run(modelAnswer(q), 10000);
+  const exp = pyExpected[q.id];
+  if (!exp.ok) return { ok: false, engine: true };
+  const got = await Py.run(code, CONFIG.PYTHON_TIMEOUT_MS);
+  if (got.engine) return { ok: false, engine: true };
+  if (!got.ok) return { ok: false };
+  let good = outMatches(got.out, exp.out);
+  if (!good && normOut(got.out) === '' && exp.last && Object.values(got.vars).includes(exp.last)) good = true;   // assigned correctly but did not print
+  if (good && CONFIG.REQUIRE_EXPECTED_OPERATOR && PY_NEED[q.c] && !PY_NEED[q.c].test(stripStrings(code))) good = false;
+  return { ok: good };
+}
+
+async function gradeAll() {
+  const per = []; let engineIssue = false;
+  for (let i = 0; i < state.qids.length; i++) {
+    const id = state.qids[i], q = qById(id), ans = state.answers[id] || '';
+    let status;
+    if (ans.trim() === '') status = 'unanswered';
+    else if (q.t === 'tvm') { let ok = false; try { ok = gradeExcel(q, ans); } catch (_) {} status = ok ? 'correct' : 'wrong'; }
+    else {
+      let r; try { r = await gradePython(q, ans); } catch (_) { r = { ok: false, engine: true }; }
+      if (r.engine) engineIssue = true;
+      status = r.ok ? 'correct' : 'wrong';
+    }
+    per.push({ n: i + 1, id, t: q.t, status });
+  }
+  return { per, engineIssue };
+}
+
+/* =====================================================================
+   SUBMIT
+   ===================================================================== */
+async function askSubmit() {
+  if (modalOpen || submitting) return;
+  const answered = state.qids.filter(isAnswered).length, left = TOTAL_Q - answered;
+  const yes = await modal({
+    title: 'Submit your test?',
+    text: 'You have answered ' + answered + ' of ' + TOTAL_Q + ' questions' + (left ? ' and ' + left + ' ' + (left === 1 ? 'is' : 'are') + ' still blank' : '') + '. You cannot change your answers after submitting.',
+    actions: [{ label: 'Keep working', value: false }, { label: 'Submit test', value: true, kind: 'primary' }]
+  });
+  if (yes) submitTest('manual');
+}
+
+async function submitTest(reason) {
+  if (!state || state.phase !== 'running' || submitting) return;
+  submitting = true; clearInterval(timerId); closeModal();
+  busy(reason === 'timeout' ? 'Time is up. Submitting your answers…' : 'Checking your answers…');
+  const endTs = Math.min(Date.now(), state.deadline);
+  const { per, engineIssue } = await gradeAll();
+  const count = s => per.filter(p => p.status === s).length;
+  const correct = count('correct'), wrong = count('wrong'), unanswered = count('unanswered');
+  const sec = Math.max(0, Math.round((endTs - state.startTs) / 1000));
+  state.result = {
+    per, answered: correct + wrong, correct, wrong, unanswered,
+    marks: correct * CONFIG.MARKS_PER_QUESTION, total: TOTAL_Q * CONFIG.MARKS_PER_QUESTION,
+    tvmMarks: per.filter(p => p.t === 'tvm' && p.status === 'correct').length * CONFIG.MARKS_PER_QUESTION,
+    pyMarks: per.filter(p => p.t === 'py' && p.status === 'correct').length * CONFIG.MARKS_PER_QUESTION,
+    timeSec: sec, submittedAt: endTs, reason, engineIssue
+  };
+  state.phase = 'submitted'; saveState();
+  unbusy(); renderResult(); sendResult();
+}
+
+function buildPayload() {
+  const r = state.result;
+  return {
+    action: 'submit', attemptId: state.attemptId, reg: state.reg, name: state.name,
+    answered: r.answered, correct: r.correct, wrong: r.wrong, unanswered: r.unanswered, marks: r.marks, total: r.total,
+    tvmMarks: r.tvmMarks, pyMarks: r.pyMarks, timeSec: r.timeSec, timeText: fmtTaken(r.timeSec),
+    tabSwitches: state.tabSwitches, malpractice: state.malpractice ? 'Yes' : 'No',
+    startedAt: state.startTs, submittedAt: r.submittedAt, reason: r.reason,
+    log: r.per.map(p => '#' + p.id + (p.status === 'correct' ? ' right' : p.status === 'wrong' ? ' wrong' : ' blank')).join(', '),
+    note: (r.reason === 'timeout' ? 'Auto-submitted when time ran out. ' : '') + (r.engineIssue ? 'Python engine problem while checking; review Python answers manually. ' : '')
+  };
+}
+
+async function sendResult() {
+  setSave('saving');
+  if (!configured()) { setSave('none'); return; }
+  const payload = buildPayload();
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const r = await postToSheet(payload, 25000);
+    if (r && r.ok) { state.saved = true; saveState(); setSave('saved'); return; }
+    await sleep(1500 * attempt);
+  }
+  setSave('failed');
+}
+
+/* =====================================================================
+   RESULT SCREEN
+   ===================================================================== */
+function renderResult() {
+  const r = state.result;
+  show('result');
+  $('#res-sub').textContent = state.name + ' (' + state.reg + ')';
+  $('#res-score').innerHTML = r.marks + ' <small>/ ' + r.total + '</small>';
+  const mal = state.malpractice;
+  const rows = [
+    ['Name', esc(state.name)], ['Register number', esc(state.reg)],
+    ['Questions answered', r.answered + ' of ' + TOTAL_Q], ['Correct answers', r.correct], ['Wrong answers', r.wrong], ['Not attempted', r.unanswered],
+    ['Total marks', r.marks + ' out of ' + r.total],
+    ['Excel marks', r.tvmMarks + ' out of ' + CONFIG.TVM_QUESTIONS * CONFIG.MARKS_PER_QUESTION],
+    ['Python marks', r.pyMarks + ' out of ' + CONFIG.PYTHON_QUESTIONS * CONFIG.MARKS_PER_QUESTION],
+    ['Time taken', fmtTaken(r.timeSec)], ['Tab switches', state.tabSwitches],
+    ['Suspected malpractice', '<span class="pill ' + (mal ? 'yes' : 'no') + '">' + (mal ? 'Yes' : 'No') + '</span>']
+  ];
+  $('#res-list').innerHTML = rows.map(x => '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>').join('');
+  $('#res-chips').innerHTML = r.per.map(p => '<span class="' + p.status + '" title="Question ' + p.n + ': ' + p.status + '">' + p.n + '</span>').join('');
+  $('#retry-save').onclick = sendResult;
+  $('#dl-result').onclick = downloadResult;
+  $('#next-student').onclick = () => { clearState(); location.reload(); };
+  setSave(state.saved ? 'saved' : configured() ? 'saving' : 'none');
+}
+function setSave(s) {
+  const box = $('#save-box');
+  const map = {
+    saving: ['', 'Saving your result to the Google Sheet…'],
+    saved: ['ok', 'Your result has been saved to the Google Sheet. You can close this page.'],
+    failed: ['bad', 'Your result could not be saved. Check your internet connection and press Retry saving. If it keeps failing, download your result and show it to your invigilator.'],
+    none: ['warn', 'The Google Sheet is not connected yet (demo mode). Nothing was saved online.']
+  };
+  box.className = 'savebox ' + map[s][0]; box.textContent = map[s][1];
+  $('#retry-save').hidden = s !== 'failed';
+  $('#next-student').hidden = !(s === 'saved' || s === 'none');
+}
+function downloadResult() {
+  const r = state.result, lines = [
+    CONFIG.TEST_TITLE, '',
+    'Name: ' + state.name, 'Register number: ' + state.reg,
+    'Questions answered: ' + r.answered + ' of ' + TOTAL_Q, 'Correct: ' + r.correct, 'Wrong: ' + r.wrong,
+    'Total marks: ' + r.marks + ' / ' + r.total, 'Time taken: ' + fmtTaken(r.timeSec),
+    'Tab switches: ' + state.tabSwitches, 'Suspected malpractice: ' + (state.malpractice ? 'Yes' : 'No'),
+    'Submitted: ' + new Date(r.submittedAt).toLocaleString(), 'Attempt ID: ' + state.attemptId
+  ];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain' }));
+  a.download = 'result-' + state.reg + '.txt'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* =====================================================================
+   INTEGRITY: tab switches and page close
+   ===================================================================== */
+function onAway() {
+  if (!state || state.phase !== 'running' || away) return;
+  if (Date.now() - lastUnloadAttempt < 2500) return;     // the "leave page?" dialog also blurs the window
+  away = true;
+  state.tabSwitches++;
+  if (CONFIG.MALPRACTICE_TAB_SWITCH_LIMIT > 0 && state.tabSwitches >= CONFIG.MALPRACTICE_TAB_SWITCH_LIMIT) state.malpractice = true;
+  saveState(); updateChip();
+  notify({ action: 'tab' });
+}
+function onBack() {
+  if (!away || document.hidden) return;
+  away = false;
+  if (state && state.phase === 'running' && !modalOpen) {
+    modal({
+      kind: 'warn', title: 'Warning: you left the test',
+      text: 'Switching tabs or windows during the test is recorded. Tab switches so far: ' + state.tabSwitches + '. Please stay on this page until you submit.',
+      actions: [{ label: 'I understand', value: true, kind: 'primary' }]
+    });
+  }
+}
+document.addEventListener('visibilitychange', () => (document.hidden ? onAway() : onBack()));
+window.addEventListener('blur', onAway);
+window.addEventListener('focus', onBack);
+
+window.addEventListener('beforeunload', e => {
+  if (state && state.phase === 'running') { lastUnloadAttempt = Date.now(); e.preventDefault(); e.returnValue = ''; return ''; }
+});
+window.addEventListener('pagehide', () => {
+  if (state && state.phase === 'running') {
+    state.malpractice = true; state.closedCount = (state.closedCount || 0) + 1; saveState();
+    notify({ action: 'closed' });
+  }
+});
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+$('#submit-top').onclick = askSubmit;
+const saved = loadState();
+if (saved && saved.phase === 'submitted') { state = saved; renderResult(); if (!state.saved) sendResult(); }
+else if (saved && saved.phase === 'running') { Py.start(); state = saved; beginTest(); }
+else { Py.start(); initStart(); }
+
+window.__tvm = { XL, CONFIG, Py, gradeExcel, gradePython, qById, get state() { return state; } };
+})();
+</script>
+</body>
+</html>
